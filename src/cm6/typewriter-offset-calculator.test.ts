@@ -67,6 +67,8 @@ function makeView(cfg: MockDomConfig = {}) {
       querySelector: () =>
         activeLineHeight
           ? {
+              // Obsidian extends HTMLElement with `getCssPropertyValue`
+              // (not a standard DOM API). The mock matches the extension.
               getCssPropertyValue: (_prop: string) => activeLineHeight,
             }
           : null,

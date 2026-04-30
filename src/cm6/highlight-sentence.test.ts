@@ -40,8 +40,12 @@ declare global {
   }
 }
 
+// Obsidian extends Array.prototype with `contains` at runtime.
+// We must polyfill it here because tests run without Obsidian's bootstrap code.
+// The `biome-ignore lint` directive suppresses the `noExtendNative` rule —
+// Biome v2 does not support that category name in inline suppressions.
 if (!Array.prototype.contains) {
-  // biome-ignore lint: Obsidian polyfill required for tests
+  // biome-ignore lint: intentional Array.prototype extension — Obsidian polyfill
   Array.prototype.contains = function <T>(this: T[], target: T): boolean {
     return this.includes(target);
   };
