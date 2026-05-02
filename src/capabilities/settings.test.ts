@@ -548,9 +548,9 @@ describe("applyStartupMigrations — additional legacy fields", () => {
   test("migrates isOnlyActivateAfterFirstInteractionEnabled from flat format", async () => {
     const legacy = { isOnlyActivateAfterFirstInteractionEnabled: true };
     const result = await applyStartupMigrations(legacy, makeVault(), "/plugin");
-    expect(
-      result.general.isOnlyActivateAfterFirstInteractionEnabled
-    ).toBe(true);
+    expect(result.general.isOnlyActivateAfterFirstInteractionEnabled).toBe(
+      true
+    );
   });
 
   test("migrates isDimHighlightListParentEnabled from flat format", async () => {
@@ -568,9 +568,9 @@ describe("applyStartupMigrations — additional legacy fields", () => {
   test("migrates isRestoreCursorPositionEnabled from flat format", async () => {
     const legacy = { isRestoreCursorPositionEnabled: true };
     const result = await applyStartupMigrations(legacy, makeVault(), "/plugin");
-    expect(
-      result.restoreCursorPosition.isRestoreCursorPositionEnabled
-    ).toBe(true);
+    expect(result.restoreCursorPosition.isRestoreCursorPositionEnabled).toBe(
+      true
+    );
   });
 
   test("migrates isHighlightCurrentLineOnlyInFocusedEditorEnabled from flat format", async () => {
@@ -594,20 +594,22 @@ describe("applyStartupMigrations — additional legacy fields", () => {
 // ---------------------------------------------------------------------------
 
 describe("applyStartupMigrations — new format passthrough is identity", () => {
-  test("does not call vault adapter when format is already new", async () => {
+  test("returns input unchanged and does not call the vault adapter", async () => {
     let adapterCalled = false;
     const spyVault = {
       adapter: {
-        exists: async () => {
+        exists: () => {
           adapterCalled = true;
-          return false;
+          return Promise.resolve(false);
         },
-        read: async () => "{}",
+        read: () => Promise.resolve("{}"),
       },
     } as any;
     const input = makeSettings();
-    await applyStartupMigrations(input, spyVault, "/plugin");
+    const result = await applyStartupMigrations(input, spyVault, "/plugin");
     // The vault adapter should NOT be consulted for new-format settings
     expect(adapterCalled).toBe(false);
+    // Passthrough is identity: same reference (and therefore same shape) returned
+    expect(result).toBe(input);
   });
 });

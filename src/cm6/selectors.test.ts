@@ -34,18 +34,26 @@ function makeView(returnValue: HTMLElement | null = null) {
   return view;
 }
 
+// Expected exact selector strings — kept in sync with src/cm6/selectors.ts.
+// Pinning the full string (rather than using `toContain`) ensures the test
+// fails if either comma-separated clause is dropped, reordered, or malformed.
+const EXPECTED_EDITOR_SELECTOR =
+  ".workspace-leaf.mod-active .cm-editor, .mod-inside-iframe .cm-editor";
+const EXPECTED_SCROLL_SELECTOR =
+  ".workspace-leaf.mod-active .cm-scroller, .mod-inside-iframe .cm-scroller";
+const EXPECTED_SIZER_SELECTOR =
+  ".workspace-leaf.mod-active .cm-sizer, .mod-inside-iframe .cm-sizer";
+
 // ---------------------------------------------------------------------------
 // getEditorDom
 // ---------------------------------------------------------------------------
 
 describe("getEditorDom", () => {
-  test("queries for the active workspace-leaf cm-editor element", () => {
+  test("queries with the exact active+iframe cm-editor selector", () => {
     const view = makeView();
     getEditorDom(view);
     expect(view._calls.length).toBe(1);
-    const selector = view._calls[0] as string;
-    expect(selector).toContain(".cm-editor");
-    expect(selector).toContain(".workspace-leaf.mod-active");
+    expect(view._calls[0]).toBe(EXPECTED_EDITOR_SELECTOR);
   });
 
   test("returns the element found by querySelector", () => {
@@ -58,13 +66,6 @@ describe("getEditorDom", () => {
     const view = makeView(null);
     expect(getEditorDom(view)).toBeNull();
   });
-
-  test("also handles iframe-hosted editors via mod-inside-iframe selector", () => {
-    const view = makeView();
-    getEditorDom(view);
-    const selector = view._calls[0] as string;
-    expect(selector).toContain(".mod-inside-iframe");
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -72,13 +73,11 @@ describe("getEditorDom", () => {
 // ---------------------------------------------------------------------------
 
 describe("getScrollDom", () => {
-  test("queries for the active workspace-leaf cm-scroller element", () => {
+  test("queries with the exact active+iframe cm-scroller selector", () => {
     const view = makeView();
     getScrollDom(view);
     expect(view._calls.length).toBe(1);
-    const selector = view._calls[0] as string;
-    expect(selector).toContain(".cm-scroller");
-    expect(selector).toContain(".workspace-leaf.mod-active");
+    expect(view._calls[0]).toBe(EXPECTED_SCROLL_SELECTOR);
   });
 
   test("returns the element found by querySelector", () => {
@@ -91,13 +90,6 @@ describe("getScrollDom", () => {
     const view = makeView(null);
     expect(getScrollDom(view)).toBeNull();
   });
-
-  test("also handles iframe-hosted editors via mod-inside-iframe selector", () => {
-    const view = makeView();
-    getScrollDom(view);
-    const selector = view._calls[0] as string;
-    expect(selector).toContain(".mod-inside-iframe");
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -105,13 +97,11 @@ describe("getScrollDom", () => {
 // ---------------------------------------------------------------------------
 
 describe("getSizerDom", () => {
-  test("queries for the active workspace-leaf cm-sizer element", () => {
+  test("queries with the exact active+iframe cm-sizer selector", () => {
     const view = makeView();
     getSizerDom(view);
     expect(view._calls.length).toBe(1);
-    const selector = view._calls[0] as string;
-    expect(selector).toContain(".cm-sizer");
-    expect(selector).toContain(".workspace-leaf.mod-active");
+    expect(view._calls[0]).toBe(EXPECTED_SIZER_SELECTOR);
   });
 
   test("returns the element found by querySelector", () => {
@@ -123,13 +113,6 @@ describe("getSizerDom", () => {
   test("returns null when querySelector returns null", () => {
     const view = makeView(null);
     expect(getSizerDom(view)).toBeNull();
-  });
-
-  test("also handles iframe-hosted editors via mod-inside-iframe selector", () => {
-    const view = makeView();
-    getSizerDom(view);
-    const selector = view._calls[0] as string;
-    expect(selector).toContain(".mod-inside-iframe");
   });
 });
 

@@ -1,9 +1,12 @@
 /**
  * Tests for capabilities/constants.ts
  *
- * Verifies that each exported constant object has exactly the expected keys and
- * string values, and that the `as const` assertion produces a frozen-enough
- * shape (all values are strings).
+ * Verifies that each exported constant object has exactly the expected keys
+ * and string values. Note: `as const` is a TypeScript type-level assertion
+ * only — it does NOT freeze the object at runtime. These tests therefore
+ * assert shape and value identity, not runtime immutability. If runtime
+ * immutability is desired, the production module would need to wrap the
+ * exports in `Object.freeze`.
  */
 
 import { describe, expect, test } from "bun:test";

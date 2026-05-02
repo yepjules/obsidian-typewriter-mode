@@ -373,6 +373,13 @@ describe("getActiveSentenceDecos — cursor-at-end retry", () => {
     const decos = collectDecos(getActiveSentenceDecos(view, DEFAULT_SETTINGS));
     // Some decoration must be produced
     expect(decos.length).toBeGreaterThanOrEqual(1);
+    // Retry at pos-1=5 should recover the "First." sentence boundary —
+    // assert the active range covers index 5 ('.') and stays within doc bounds.
+    const active = decos.find((d) => d.className === "active-sentence");
+    expect(active).toBeDefined();
+    expect(active?.from).toBeGreaterThanOrEqual(0);
+    expect(active?.to).toBeLessThanOrEqual(doc.length);
+    expect((active?.to ?? 0) - (active?.from ?? 0)).toBeGreaterThan(0);
   });
 
   test("retry at pos-1 recovers the active sentence boundary", () => {
@@ -388,6 +395,13 @@ describe("getActiveSentenceDecos — cursor-at-end retry", () => {
     ).not.toThrow();
     const decos = collectDecos(getActiveSentenceDecos(view, DEFAULT_SETTINGS));
     expect(decos.length).toBeGreaterThanOrEqual(1);
+    // After retry, the active sentence must lie within the document and have
+    // a positive length — guards against retry returning a degenerate range.
+    const active = decos.find((d) => d.className === "active-sentence");
+    expect(active).toBeDefined();
+    expect(active?.from).toBeGreaterThanOrEqual(0);
+    expect(active?.to).toBeLessThanOrEqual(doc.length);
+    expect((active?.to ?? 0) - (active?.from ?? 0)).toBeGreaterThan(0);
   });
 });
 
@@ -440,9 +454,9 @@ describe("getActiveSentenceDecos — three or more sentences", () => {
     const active = decos.find((d) => d.className === "active-sentence");
     expect(active).toBeDefined();
     // Active sentence starts after 'One.' (index 4, past 'One.') then skip space → 5
-    expect(active!.from).toBeGreaterThan(0);
-    expect(active!.from).toBeLessThan(9);
-    expect(active!.to).toBeLessThanOrEqual(doc.length);
+    expect(active?.from).toBeGreaterThan(0);
+    expect(active?.from).toBeLessThan(9);
+    expect(active?.to).toBeLessThanOrEqual(doc.length);
   });
 
   test("correctly identifies the last sentence in a three-sentence line", () => {
@@ -454,7 +468,7 @@ describe("getActiveSentenceDecos — three or more sentences", () => {
     const active = decos.find((d) => d.className === "active-sentence");
     expect(active).toBeDefined();
     // Active sentence should end at doc.length (last sentence)
-    expect(active!.to).toBe(doc.length);
+    expect(active?.to).toBe(doc.length);
   });
 
   test("paragraph decos cover non-active parts on both sides of the middle sentence", () => {
