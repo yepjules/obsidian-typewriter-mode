@@ -417,3 +417,197 @@ describe("applyStartupMigrations — legacy flat format", () => {
     expect(result.restoreCursorPosition.cursorPositions).toEqual({});
   });
 });
+
+// ---------------------------------------------------------------------------
+// DEFAULT_SETTINGS — fields not covered by the earlier per-category tests
+// ---------------------------------------------------------------------------
+
+describe("DEFAULT_SETTINGS — additional field coverage", () => {
+  test("general.isOnlyActivateAfterFirstInteractionEnabled defaults to false", () => {
+    expect(
+      DEFAULT_SETTINGS.general.isOnlyActivateAfterFirstInteractionEnabled
+    ).toBe(false);
+  });
+
+  test("dimming.isDimHighlightListParentEnabled defaults to false", () => {
+    expect(DEFAULT_SETTINGS.dimming.isDimHighlightListParentEnabled).toBe(
+      false
+    );
+  });
+
+  test("dimming.isDimTableAsOneEnabled defaults to true", () => {
+    expect(DEFAULT_SETTINGS.dimming.isDimTableAsOneEnabled).toBe(true);
+  });
+
+  test("currentLine.isHighlightCurrentLineOnlyInFocusedEditorEnabled defaults to false", () => {
+    expect(
+      DEFAULT_SETTINGS.currentLine
+        .isHighlightCurrentLineOnlyInFocusedEditorEnabled
+    ).toBe(false);
+  });
+
+  test("currentLine.isPauseCurrentLineHighlightWhileScrollingEnabled defaults to false", () => {
+    expect(
+      DEFAULT_SETTINGS.currentLine
+        .isPauseCurrentLineHighlightWhileScrollingEnabled
+    ).toBe(false);
+  });
+
+  test("currentLine.isPauseCurrentLineHighlightWhileSelectingEnabled defaults to false", () => {
+    expect(
+      DEFAULT_SETTINGS.currentLine
+        .isPauseCurrentLineHighlightWhileSelectingEnabled
+    ).toBe(false);
+  });
+
+  test("currentLine.currentLineHighlightUnderlineThickness defaults to 1", () => {
+    expect(
+      DEFAULT_SETTINGS.currentLine.currentLineHighlightUnderlineThickness
+    ).toBe(1);
+  });
+
+  test("currentLine default highlight colors are set", () => {
+    expect(
+      DEFAULT_SETTINGS.currentLine["currentLineHighlightColor-dark"]
+    ).toBeDefined();
+    expect(
+      DEFAULT_SETTINGS.currentLine["currentLineHighlightColor-light"]
+    ).toBeDefined();
+  });
+
+  test("restoreCursorPosition.isRestoreCursorPositionEnabled defaults to false", () => {
+    expect(
+      DEFAULT_SETTINGS.restoreCursorPosition.isRestoreCursorPositionEnabled
+    ).toBe(false);
+  });
+
+  test("restoreCursorPosition.cursorPositions defaults to empty object", () => {
+    expect(DEFAULT_SETTINGS.restoreCursorPosition.cursorPositions).toEqual({});
+  });
+
+  test("writingFocus.doesWritingFocusShowHeader defaults to false", () => {
+    expect(DEFAULT_SETTINGS.writingFocus.doesWritingFocusShowHeader).toBe(
+      false
+    );
+  });
+
+  test("writingFocus.doesWritingFocusShowStatusBar defaults to false", () => {
+    expect(DEFAULT_SETTINGS.writingFocus.doesWritingFocusShowStatusBar).toBe(
+      false
+    );
+  });
+
+  test("hemingwayMode.hemingwayModeStatusBarText has a non-empty default", () => {
+    expect(
+      DEFAULT_SETTINGS.hemingwayMode.hemingwayModeStatusBarText.length
+    ).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// setSettingByPath — additional coverage
+// ---------------------------------------------------------------------------
+
+describe("setSettingByPath — additional coverage", () => {
+  test("sets an array setting", () => {
+    const settings = makeSettings();
+    setSettingByPath(settings, "general.enabledFilePaths", [
+      "folder/",
+      "note.md",
+    ]);
+    expect(settings.general.enabledFilePaths).toEqual(["folder/", "note.md"]);
+  });
+
+  test("sets disabledFilePaths independently of enabledFilePaths", () => {
+    const settings = makeSettings();
+    setSettingByPath(settings, "general.enabledFilePaths", ["a.md"]);
+    setSettingByPath(settings, "general.disabledFilePaths", ["b.md"]);
+    expect(settings.general.enabledFilePaths).toEqual(["a.md"]);
+    expect(settings.general.disabledFilePaths).toEqual(["b.md"]);
+  });
+
+  test("can reset a value back to default via setSettingByPath", () => {
+    const settings = makeSettings();
+    setSettingByPath(settings, "typewriter.typewriterOffset", 0.9);
+    setSettingByPath(
+      settings,
+      "typewriter.typewriterOffset",
+      DEFAULT_SETTINGS.typewriter.typewriterOffset
+    );
+    expect(settings.typewriter.typewriterOffset).toBe(
+      DEFAULT_SETTINGS.typewriter.typewriterOffset
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// applyStartupMigrations — additional legacy field coverage
+// ---------------------------------------------------------------------------
+
+describe("applyStartupMigrations — additional legacy fields", () => {
+  test("migrates isOnlyActivateAfterFirstInteractionEnabled from flat format", async () => {
+    const legacy = { isOnlyActivateAfterFirstInteractionEnabled: true };
+    const result = await applyStartupMigrations(legacy, makeVault(), "/plugin");
+    expect(
+      result.general.isOnlyActivateAfterFirstInteractionEnabled
+    ).toBe(true);
+  });
+
+  test("migrates isDimHighlightListParentEnabled from flat format", async () => {
+    const legacy = { isDimHighlightListParentEnabled: true };
+    const result = await applyStartupMigrations(legacy, makeVault(), "/plugin");
+    expect(result.dimming.isDimHighlightListParentEnabled).toBe(true);
+  });
+
+  test("migrates isDimTableAsOneEnabled from flat format", async () => {
+    const legacy = { isDimTableAsOneEnabled: false };
+    const result = await applyStartupMigrations(legacy, makeVault(), "/plugin");
+    expect(result.dimming.isDimTableAsOneEnabled).toBe(false);
+  });
+
+  test("migrates isRestoreCursorPositionEnabled from flat format", async () => {
+    const legacy = { isRestoreCursorPositionEnabled: true };
+    const result = await applyStartupMigrations(legacy, makeVault(), "/plugin");
+    expect(
+      result.restoreCursorPosition.isRestoreCursorPositionEnabled
+    ).toBe(true);
+  });
+
+  test("migrates isHighlightCurrentLineOnlyInFocusedEditorEnabled from flat format", async () => {
+    const legacy = { isHighlightCurrentLineOnlyInFocusedEditorEnabled: true };
+    const result = await applyStartupMigrations(legacy, makeVault(), "/plugin");
+    expect(
+      result.currentLine.isHighlightCurrentLineOnlyInFocusedEditorEnabled
+    ).toBe(true);
+  });
+
+  test("migrates fadeLinesIntensity from flat format", async () => {
+    const legacy = { fadeLinesIntensity: 0.8, isFadeLinesEnabled: true };
+    const result = await applyStartupMigrations(legacy, makeVault(), "/plugin");
+    expect(result.currentLine.fadeLinesIntensity).toBe(0.8);
+    expect(result.currentLine.isFadeLinesEnabled).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// applyStartupMigrations — new format with partial data
+// ---------------------------------------------------------------------------
+
+describe("applyStartupMigrations — new format passthrough is identity", () => {
+  test("does not call vault adapter when format is already new", async () => {
+    let adapterCalled = false;
+    const spyVault = {
+      adapter: {
+        exists: async () => {
+          adapterCalled = true;
+          return false;
+        },
+        read: async () => "{}",
+      },
+    } as any;
+    const input = makeSettings();
+    await applyStartupMigrations(input, spyVault, "/plugin");
+    // The vault adapter should NOT be consulted for new-format settings
+    expect(adapterCalled).toBe(false);
+  });
+});
