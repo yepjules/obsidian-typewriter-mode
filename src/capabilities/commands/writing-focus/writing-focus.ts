@@ -109,15 +109,15 @@ export class WritingFocus {
     ) {
       this.tm.plugin.app.workspace.containerEl.removeClass(this.maximizedClass);
     }
-    if (document.body.classList.contains(this.focusModeClass)) {
-      document.body.classList.remove(this.focusModeClass);
+    if (activeDocument.body.classList.contains(this.focusModeClass)) {
+      activeDocument.body.classList.remove(this.focusModeClass);
     }
   }
 
   private enableFocusModeForView(view: ItemView) {
     this.focusModeActive = true;
 
-    if (!document.body.classList.contains(this.focusModeClass)) {
+    if (!activeDocument.body.classList.contains(this.focusModeClass)) {
       this.storeSplitsValues();
     }
 
@@ -128,14 +128,14 @@ export class WritingFocus {
       !this.tm.plugin.app.workspace.containerEl.hasClass(this.maximizedClass)
     );
 
-    document.body.classList.toggle(
+    activeDocument.body.classList.toggle(
       this.focusModeClass,
-      !document.body.classList.contains(this.focusModeClass)
+      !activeDocument.body.classList.contains(this.focusModeClass)
     );
 
-    if (document.body.classList.contains(this.focusModeClass)) {
+    if (activeDocument.body.classList.contains(this.focusModeClass)) {
       Array.from(
-        document.querySelectorAll(`.${this.focusModeClass} .workspace-split`)
+        activeDocument.querySelectorAll(`.${this.focusModeClass} .workspace-split`)
       ).forEach((node) => {
         const theNode = node as HTMLElement;
         const hasActiveKids = theNode.querySelector(".mod-active");
@@ -159,13 +159,13 @@ export class WritingFocus {
   private disableFocusModeForView(view: ItemView) {
     this.removeExtraneousClasses();
 
-    if (document.body.classList.contains(this.focusModeClass)) {
-      document.body.classList.remove(this.focusModeClass);
+    if (activeDocument.body.classList.contains(this.focusModeClass)) {
+      activeDocument.body.classList.remove(this.focusModeClass);
     }
 
     this.restoreSplits();
 
-    Array.from(document.querySelectorAll(".workspace-split")).forEach(
+    Array.from(activeDocument.querySelectorAll(".workspace-split")).forEach(
       (node) => {
         const theNode = node as HTMLElement;
         theNode.style.display = "flex";
