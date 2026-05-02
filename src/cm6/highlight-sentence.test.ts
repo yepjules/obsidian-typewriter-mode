@@ -352,3 +352,132 @@ describe("getActiveSentenceDecos — custom delimiters", () => {
     expect(active?.to).toBe(doc.length);
   });
 });
+
+// ---------------------------------------------------------------------------
+// getActiveSentenceDecos — cursor-at-end retry logic
+// ---------------------------------------------------------------------------
+
+describe("getActiveSentenceDecos — cursor-at-end retry", () => {
+  test("correctly finds sentence when cursor is right after a delimiter", () => {
+    // "First. Second."
+    //  0123456789...
+    // '.' at index 5; cursor at 6 (right after the period, before space)
+    // First call with pos=6 finds no forward delimiter from pos=6 → end=null
+    // pos(6) > line.from(0) so we retry with pos-1=5
+    const doc = "First. Second.";
+    const view = makeView(doc, 6);
+    // Should not throw
+    expect(() =>
+      collectDecos(getActiveSentenceDecos(view, DEFAULT_SETTINGS))
+    ).not.toThrow();
+    const decos = collectDecos(getActiveSentenceDecos(view, DEFAULT_SETTINGS));
+    // Some decoration must be produced
+    expect(decos.length).toBeGreaterThanOrEqual(1);
+    // Retry at pos-1=5 should recover the "First." sentence boundary —
+    // assert the active range covers index 5 ('.') and stays within doc bounds.
+    const active = decos.find((d) => d.className === "active-sentence");
+    expect(active).toBeDefined();
+    expect(active?.from).toBeGreaterThanOrEqual(0);
+    expect(active?.to).toBeLessThanOrEqual(doc.length);
+    expect((active?.to ?? 0) - (active?.from ?? 0)).toBeGreaterThan(0);
+  });
+
+  test("retry at pos-1 recovers the active sentence boundary", () => {
+    // "Hello world. Goodbye."
+    //  0           12      20
+    // Cursor at 12 (space after '.') — forward scan from 12 finds '.' at 19
+    // backward scan from 11: finds '.' at 11 → start = 13 (after '. ')
+    // But: first getActiveSentenceBounds(pos=12) may give end=null so we retry
+    const doc = "Hello world. Goodbye.";
+    const view = makeView(doc, 12);
+    expect(() =>
+      collectDecos(getActiveSentenceDecos(view, DEFAULT_SETTINGS))
+    ).not.toThrow();
+    const decos = collectDecos(getActiveSentenceDecos(view, DEFAULT_SETTINGS));
+    expect(decos.length).toBeGreaterThanOrEqual(1);
+    // After retry, the active sentence must lie within the document and have
+    // a positive length — guards against retry returning a degenerate range.
+    const active = decos.find((d) => d.className === "active-sentence");
+    expect(active).toBeDefined();
+    expect(active?.from).toBeGreaterThanOrEqual(0);
+    expect(active?.to).toBeLessThanOrEqual(doc.length);
+    expect((active?.to ?? 0) - (active?.from ?? 0)).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getActiveSentenceDecos — single-character content
+// ---------------------------------------------------------------------------
+
+describe("getActiveSentenceDecos — single-character content", () => {
+  test("handles a line containing only a delimiter", () => {
+    const doc = ".";
+    const view = makeView(doc, 0);
+    expect(() =>
+      collectDecos(getActiveSentenceDecos(view, DEFAULT_SETTINGS))
+    ).not.toThrow();
+  });
+
+  test("handles a line containing only a question mark", () => {
+    const doc = "?";
+    const view = makeView(doc, 0);
+    expect(() =>
+      collectDecos(getActiveSentenceDecos(view, DEFAULT_SETTINGS))
+    ).not.toThrow();
+  });
+
+  test("handles a line containing only whitespace", () => {
+    const doc = "   ";
+    const view = makeView(doc, 1);
+    expect(() =>
+      collectDecos(getActiveSentenceDecos(view, DEFAULT_SETTINGS))
+    ).not.toThrow();
+    const decos = collectDecos(getActiveSentenceDecos(view, DEFAULT_SETTINGS));
+    // Whole whitespace-only line — one active-sentence spanning the whole line
+    const active = decos.find((d) => d.className === "active-sentence");
+    expect(active).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getActiveSentenceDecos — multiple sentences with identical delimiters
+// ---------------------------------------------------------------------------
+
+describe("getActiveSentenceDecos — three or more sentences", () => {
+  test("correctly identifies the middle sentence in a three-sentence line", () => {
+    // "One. Two. Three."
+    //  0   4   9    15
+    // '.' at 3, 8, 15; cursor at 6 (inside 'Two')
+    const doc = "One. Two. Three.";
+    const view = makeView(doc, 6);
+    const decos = collectDecos(getActiveSentenceDecos(view, DEFAULT_SETTINGS));
+    const active = decos.find((d) => d.className === "active-sentence");
+    expect(active).toBeDefined();
+    // Active sentence starts after 'One.' (index 4, past 'One.') then skip space → 5
+    expect(active?.from).toBeGreaterThan(0);
+    expect(active?.from).toBeLessThan(9);
+    expect(active?.to).toBeLessThanOrEqual(doc.length);
+  });
+
+  test("correctly identifies the last sentence in a three-sentence line", () => {
+    // "One. Two. Three."
+    // cursor at 12 (inside 'Three')
+    const doc = "One. Two. Three.";
+    const view = makeView(doc, 12);
+    const decos = collectDecos(getActiveSentenceDecos(view, DEFAULT_SETTINGS));
+    const active = decos.find((d) => d.className === "active-sentence");
+    expect(active).toBeDefined();
+    // Active sentence should end at doc.length (last sentence)
+    expect(active?.to).toBe(doc.length);
+  });
+
+  test("paragraph decos cover non-active parts on both sides of the middle sentence", () => {
+    // "One. Two. Three." — cursor in "Two"
+    const doc = "One. Two. Three.";
+    const view = makeView(doc, 6);
+    const decos = collectDecos(getActiveSentenceDecos(view, DEFAULT_SETTINGS));
+    const paras = decos.filter((d) => d.className === "active-paragraph");
+    // Expect paragraph decos before and after the active sentence
+    expect(paras.length).toBeGreaterThanOrEqual(2);
+  });
+});

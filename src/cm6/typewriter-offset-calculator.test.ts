@@ -668,3 +668,64 @@ describe("getTypewriterPositionData — line height computation", () => {
     expect(data?.typewriterOffset).toBe(600); // 800 * 0.75
   });
 });
+
+// ---------------------------------------------------------------------------
+// getTypewriterPositionData — scroller missing but editor present
+// ---------------------------------------------------------------------------
+
+describe("getTypewriterPositionData — scroller missing, editor present", () => {
+  test("scrollOffset is 0 when scroller DOM is missing even with typewriter scroll", () => {
+    // missingScroller=true, missingEditor=false → editorDom present, scrollDom null
+    // !(editorDom && scrollDom) → true → scrollOffset = 0
+    const view = makeView({
+      editorClientHeight: 600,
+      editorRectTop: 0,
+      missingScroller: true,
+      caretCoords: { top: 200, bottom: 220, left: 0, right: 0 },
+      activeLineHeight: "20px",
+    });
+    const tm = makeTm({
+      typewriter: {
+        isTypewriterScrollEnabled: true,
+        isOnlyMaintainTypewriterOffsetWhenReachedEnabled: false,
+        isTypewriterOnlyUseCommandsEnabled: false,
+        typewriterOffset: 0.5,
+      },
+      keepLinesAboveAndBelow: {
+        isKeepLinesAboveAndBelowEnabled: false,
+        linesAboveAndBelow: 5,
+      },
+    });
+    const calc = new TypewriterOffsetCalculator(tm, view);
+    const data = calc.getTypewriterPositionData();
+    expect(data).not.toBeNull();
+    expect(data?.scrollOffset).toBe(0);
+  });
+
+  test("scrollOffset is 0 when scroller DOM is missing with keepLinesAboveAndBelow", () => {
+    const view = makeView({
+      editorClientHeight: 600,
+      editorRectTop: 0,
+      missingScroller: true,
+      caretCoords: { top: 300, bottom: 320, left: 0, right: 0 },
+      activeLineHeight: "20px",
+      defaultLineHeight: 20,
+    });
+    const tm = makeTm({
+      typewriter: {
+        isTypewriterScrollEnabled: false,
+        isOnlyMaintainTypewriterOffsetWhenReachedEnabled: false,
+        isTypewriterOnlyUseCommandsEnabled: false,
+        typewriterOffset: 0.5,
+      },
+      keepLinesAboveAndBelow: {
+        isKeepLinesAboveAndBelowEnabled: true,
+        linesAboveAndBelow: 3,
+      },
+    });
+    const calc = new TypewriterOffsetCalculator(tm, view);
+    const data = calc.getTypewriterPositionData();
+    expect(data).not.toBeNull();
+    expect(data?.scrollOffset).toBe(0);
+  });
+});
